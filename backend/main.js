@@ -36,6 +36,27 @@ app.get("/", (req, res) => {
   res.status(200).send();
 });
 
+app.get("/getUsers", async (req, res) => {
+  const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+  // gets array of all documents in the users collection
+  try {
+    await client.connect();
+    const database = client.db("users");
+    const collection = database.collection("users");
+    const cursor = collection.find({});
+    const results = await cursor.toArray();
+    res.status(200).json(results);
+  } catch (error) {
+    console.error('Error getting documents:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  } finally {
+    await client.close();
+  }
+
+})
+
+
 app.post("/createProfileEntry", jsonParser, async (req, res) => {
   /* 
   required input
@@ -51,6 +72,7 @@ app.post("/createProfileEntry", jsonParser, async (req, res) => {
   // Spawn the Python script with arguments
   // process.env.PYTHONPATH = "/opt/local/bin/python3"
   const pythonProcess = spawn(process.env.HOMEBREW_PREFIX + '/bin/python3', ["profile_api.py", name]);
+  //const pythonProcess = spawn('/Library/Frameworks/Python.framework/Versions/3.11/bin/python3', ["profile_api.py", name]);
 
   let responseData = '';
 
